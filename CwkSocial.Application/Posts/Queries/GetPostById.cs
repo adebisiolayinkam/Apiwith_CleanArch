@@ -8,5 +8,6 @@ namespace CwkSocial.Application.Posts.Queries
 {
     public class GetPostById
     {
+        public int MyProperty { get; set; }
     }
 }

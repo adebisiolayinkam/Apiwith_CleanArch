@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CwkSocial.Application.Posts.Queries
 {
-    public class GetPostById : IRequest<OperationResult<Post>>
+    public class GetPostComments : IRequest<OperationResult<List<PostComment>>>
     {
         public Guid PostId { get; set; }
     }

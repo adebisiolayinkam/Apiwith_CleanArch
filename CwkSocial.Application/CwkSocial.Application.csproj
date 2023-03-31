@@ -14,11 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Posts\CommandHandlers\" />
-    <Folder Include="Posts\Commands\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Cwk.Domain\Cwk.Domain.csproj" />
     <ProjectReference Include="..\CwkSocial.Dal\CwkSocial.Dal.csproj" />
   </ItemGroup>

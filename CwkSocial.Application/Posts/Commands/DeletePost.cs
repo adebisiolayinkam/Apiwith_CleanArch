@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CwkSocial.Application.Posts.Queries
+namespace CwkSocial.Application.Posts.Commands
 {
-    public class GetPostById : IRequest<OperationResult<Post>>
+    public class DeletePost : IRequest<OperationResult<Post>>
     {
         public Guid PostId { get; set; }
     }

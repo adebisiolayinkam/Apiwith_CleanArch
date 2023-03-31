@@ -7,10 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CwkSocial.Application.Posts.Queries
+namespace CwkSocial.Application.Posts.Commands
 {
-    public class GetPostById : IRequest<OperationResult<Post>>
+    public class UpdatePostText : IRequest<OperationResult<Post>>
     {
+        public string NewText { get; set; }
         public Guid PostId { get; set; }
     }
 }

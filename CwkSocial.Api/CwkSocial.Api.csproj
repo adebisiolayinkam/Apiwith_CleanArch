@@ -34,8 +34,4 @@
     <ProjectReference Include="..\CwkSocial.Dal\CwkSocial.Dal.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Contracts\Posts\Requests\" />
-  </ItemGroup>
-
 </Project>

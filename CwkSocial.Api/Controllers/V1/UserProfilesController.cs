@@ -7,6 +7,8 @@ using CwkSocial.Application.Enums;
 using CwkSocial.Application.UserProfiles.Commands;
 using CwkSocial.Application.UserProfiles.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
@@ -15,8 +17,9 @@ namespace CwkSocial.Api.Controllers.V1
     [ApiVersion("1.0")]
     [Route(ApiRoutes.BaseRoute)]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class UserProfilesController : BaseController
-    {
+    {    
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
         public UserProfilesController(IMediator mediator, IMapper mapper)
@@ -28,28 +31,12 @@ namespace CwkSocial.Api.Controllers.V1
 
         [HttpGet]
         public async Task<IActionResult> GetAllProfiles()
-        {
-            //throw new NotImplementedException("Method not implemented");
-
+        {            
             var query = new GetAllUserProfiles();
             var response = await _mediator.Send(query);
             var profiles = _mapper.Map<List<UserProfileResponse>>(response.Payload);
             return Ok(profiles);
         }
-
-        [HttpPost]
-        [ValidateModel]
-        public async Task<IActionResult> CreateUserProfile([FromBody] UserProfileCreateUpdate profile)
-        {
-            var command = _mapper.Map<CreateUserCommand>(profile);
-            var response = await _mediator.Send(command);
-
-            var userProfile = _mapper.Map<UserProfileResponse>(response.Payload);
-
-            return response.IsError ? HandleErrorResponse(response.Errors) : CreatedAtAction(nameof(GetUserProfileById),
-                new { id = userProfile.UserProfileId }, userProfile);
-        }
-
 
         //[Route("{id}")]
         [Route(ApiRoutes.UserProfiles.IdRoute)]
@@ -59,10 +46,6 @@ namespace CwkSocial.Api.Controllers.V1
         {
             var query = new GetUserProfileById { UserProfileId = Guid.Parse(id) };
             var response = await _mediator.Send(query);
-
-            // if (response is null) return NotFound($"No user with profile ID {id} found");
-
-            //return response.IsError ? HandleErrorResponse(response.Errors) : NoContent();
 
             if (response.IsError)
                return HandleErrorResponse(response.Errors);

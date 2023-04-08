@@ -27,8 +27,6 @@ namespace CwkSocial.Api.Filters
                 }
                 context.Result = new BadRequestObjectResult(apiError);
 
-                // context.Result = new JsonResult(apiError) { StatusCode = 400};
-
             }
         }
     }

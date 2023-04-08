@@ -41,15 +41,18 @@ namespace Cwk.Domain.Aggregates.UserProfileAggregate
 
             if (validationResult.IsValid)
                 info = objToValidate;
-
+            else
+            {
+                info = new BasicInfo();
+            }
             
             var exception = new UserProfileNotValidException("The user profile is not valid");
             foreach (var error in validationResult.Errors)
             {
                 exception.ValidationErrors.Add(error.ErrorMessage);
             }
-
-            throw exception;
+            return info;
+            //throw exception;
 
         }
     }

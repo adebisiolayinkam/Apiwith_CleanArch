@@ -27,35 +27,19 @@ namespace CwkSocial.Application.Posts.CommandHandlers
             {
                 var post = Post.CreatePost(request.UserProfileId, request.TextContent);
                 _ctx.Posts.Add(post);
-                await _ctx.SaveChangesAsync();
+                await _ctx.SaveChangesAsync(cancellationToken);
 
                 result.Payload = post;
 
             }
             catch (PostNotValidException e)
             {
-
-                result.IsError = true;
-                e.ValidationErrors.ForEach(er =>
-                {
-                    var error = new Error
-                    {
-                        Code = ErrorCode.ValidationError,
-                        Message = $"{e.Message}"
-                    };
-                    result.Errors.Add(error);
-                });
+                e.ValidationErrors.ForEach(er => result.AddError(ErrorCode.ValidationError, er));
             }
 
             catch (Exception e)
             {
-                var error = new Error
-                {
-                    Code = ErrorCode.UnknowError,
-                    Message = $"{e.Message}"
-                };
-                result.IsError = true;
-                result.Errors.Add(error);
+                result.AddUnknownError(e.Message);
             }
 
             return result;

@@ -41,10 +41,10 @@ namespace CwkSocial.Application.Identity.Handlers
             try
             {               
                 var identityUser = await ValidateAndGetIdentityAsync(request, result);
-                if (identityUser == null) return result;
+                if (result.IsError) return result;
 
                 var userProfile =await _ctx.UserProfiles
-                    .FirstOrDefaultAsync(up =>up.IdentityId == identityUser.Id);
+                    .FirstOrDefaultAsync(up =>up.IdentityId == identityUser.Id, cancellationToken: cancellationToken);
 
                             
                 result.Payload = GetJwtString(identityUser, userProfile);
@@ -53,13 +53,7 @@ namespace CwkSocial.Application.Identity.Handlers
             }
             catch (Exception e)
             {
-                var error = new Error
-                {
-                    Code = ErrorCode.UnknowError,
-                    Message = $"{e.Message}"
-                };
-                result.IsError = true;
-                result.Errors.Add(error);
+                result.AddUnknownError(e.Message);
             }
             return result;
         }
@@ -69,31 +63,13 @@ namespace CwkSocial.Application.Identity.Handlers
             var identityUser = await _userManager.FindByEmailAsync(request.Username);
 
             if (identityUser is null)
-            {
-                result.IsError = true;
-                var error = new Error
-                {
-                    Code = ErrorCode.IdentityUserDoesNotExist,
-                    Message = $"Unable to find a user with the specified username"
-                };
-                result.Errors.Add(error);
-                return null;
-            }
+                result.AddError(ErrorCode.IdentityUserDoesNotExist, IdentityErrorMessages.NonExistentIdentityUser);
 
 
             var validPassword = await _userManager.CheckPasswordAsync(identityUser, request.Password);
 
             if (!validPassword)
-            {
-                result.IsError = true;
-                var error = new Error
-                {
-                    Code = ErrorCode.IncrroectPassword,
-                    Message = $"The  provided password is incorrect"
-                };
-                result.Errors.Add(error);
-                return null;
-            }
+                result.AddError(ErrorCode.IncrroectPassword, IdentityErrorMessages.IncorrectPassword);
             return identityUser;
         }
 

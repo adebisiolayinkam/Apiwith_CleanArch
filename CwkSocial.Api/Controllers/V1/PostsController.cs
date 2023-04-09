@@ -3,6 +3,7 @@ using Cwk.Domain.Aggregates.PostAggregate;
 using CwkSocial.Api.Contracts.Common;
 using CwkSocial.Api.Contracts.Posts.Requests;
 using CwkSocial.Api.Contracts.Posts.Responses;
+using CwkSocial.Api.Extensions;
 using CwkSocial.Api.Filters;
 using CwkSocial.Application.Enums;
 using CwkSocial.Application.Models;
@@ -33,9 +34,9 @@ namespace CwkSocial.Api.Controllers.V1
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllPosts()
+        public async Task<IActionResult> GetAllPosts(CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new GetAllPosts());
+            var result = await _mediator.Send(new GetAllPosts(), cancellationToken);
             var mapped = _mapper.Map<List<PostResponse>>(result.Payload);
             return result.IsError ? HandleErrorResponse(result.Errors) : Ok(mapped);
         }
@@ -44,11 +45,11 @@ namespace CwkSocial.Api.Controllers.V1
         [HttpGet]
         [Route(ApiRoutes.Posts.IdRoute)]
         [ValidateGuid("id")]
-        public async Task <IActionResult> GetById(string id)
+        public async Task <IActionResult> GetById(string id, CancellationToken cancellationToken)
         {
             var postId = Guid.Parse(id);
             var query = new GetPostById() { PostId = postId };
-            var result = await _mediator.Send(query);
+            var result = await _mediator.Send(query, cancellationToken);
 
             var mapped = _mapper.Map<PostResponse>(result.Payload);
             return result.IsError ? HandleErrorResponse(result.Errors) : Ok(mapped);
@@ -56,19 +57,18 @@ namespace CwkSocial.Api.Controllers.V1
 
         [HttpPost]
         [ValidateModel]
-        public async Task<IActionResult> CreatePost([FromBody]PostCreate newPost)
+        public async Task<IActionResult> CreatePost([FromBody]PostCreate newPost, CancellationToken cancellationToken )
         {
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-            var userProfileId = identity.FindFirst("UserProfileId");
+            var userProfileId = HttpContext.GetUserProfileIdClaimValue();
 
 
             var command = new CreatePost()
             {
-                UserProfileId = Guid.Parse(newPost.UserProfileId),
+                UserProfileId = userProfileId,
                 TextContent = newPost.TextContent
             };
 
-            var result = await _mediator.Send(command);
+            var result = await _mediator.Send(command, cancellationToken);
             var mapped = _mapper.Map<PostResponse>(result.Payload);
 
             return result.IsError ? HandleErrorResponse(result.Errors)
@@ -79,14 +79,17 @@ namespace CwkSocial.Api.Controllers.V1
         [Route(ApiRoutes.Posts.IdRoute)]
         [ValidateGuid("id")]
         [ValidateModel]
-        public async Task<IActionResult> UpdatePostText([FromBody] PostUpdate updatedPost, string id)
+        public async Task<IActionResult> UpdatePostText([FromBody] PostUpdate updatedPost, string id, CancellationToken cancellationToken)
         {
+            var userProfileId = HttpContext.GetUserProfileIdClaimValue();
+
             var command = new UpdatePostText()
             {
                 NewText = updatedPost.Text,
-                PostId= Guid.Parse(id)
+                PostId= Guid.Parse(id),
+                UserProfileId = userProfileId
             };
-            var result = await _mediator.Send(command);
+            var result = await _mediator.Send(command, cancellationToken);
 
             return result.IsError ? HandleErrorResponse(result.Errors) : NoContent();
 
@@ -95,10 +98,12 @@ namespace CwkSocial.Api.Controllers.V1
         [HttpDelete]
         [Route(ApiRoutes.Posts.IdRoute)]
         [ValidateGuid("id")]
-        public async Task<IActionResult> DeletePost(string id)
+        public async Task<IActionResult> DeletePost(string id, CancellationToken cancellationToken)
         {
-            var command = new DeletePost() { PostId = Guid.Parse(id) };
-            var result = await _mediator.Send(command);
+            var userProfileId = HttpContext.GetUserProfileIdClaimValue();
+
+            var command = new DeletePost() { PostId = Guid.Parse(id), UserProfileId = userProfileId };
+            var result = await _mediator.Send(command, cancellationToken);
 
             return result.IsError ? HandleErrorResponse(result.Errors) : NoContent();
         }
@@ -106,10 +111,10 @@ namespace CwkSocial.Api.Controllers.V1
         [HttpGet]
         [Route(ApiRoutes.Posts.PostComments)]
         [ValidateGuid("postId")]
-        public async Task<IActionResult> GetCommentsByPostId(string postId)
+        public async Task<IActionResult> GetCommentsByPostId(string postId, CancellationToken cancellationToken)
         {
             var query = new GetPostComments() { PostId = Guid.Parse(postId) };
-            var result = await _mediator.Send(query);
+            var result = await _mediator.Send(query, cancellationToken);
 
             if (result.IsError) HandleErrorResponse(result.Errors);
             var comments = _mapper.Map<List<PostCommentResponse>>(result.Payload);
@@ -120,7 +125,7 @@ namespace CwkSocial.Api.Controllers.V1
         [Route(ApiRoutes.Posts.PostComments)]
         [ValidateGuid("postId")]
         [ValidateModel]
-        public async Task<IActionResult> AddCommentToPost(string postId, [FromBody] PostCommentCreate comment)
+        public async Task<IActionResult> AddCommentToPost(string postId, [FromBody] PostCommentCreate comment, CancellationToken cancellationToken)
         {
             var isValidGuid = Guid.TryParse(comment.UserProfileId, out var userProfileId);
 
@@ -143,7 +148,7 @@ namespace CwkSocial.Api.Controllers.V1
                 CommentText = comment.Text
             };
 
-            var result = await _mediator.Send(command);
+            var result = await _mediator.Send(command, cancellationToken);
             if (result.IsError) return HandleErrorResponse(result.Errors);
 
             var newComment = _mapper.Map<PostCommentResponse>(result.Payload);

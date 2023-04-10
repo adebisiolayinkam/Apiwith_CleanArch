@@ -9,7 +9,7 @@ namespace CwkSocial.Api.Extensions
             return GetGuidClaimValue("UserProfileId", context);
         }
 
-        public static Guid GetIdentityClaimValue(this HttpContext context)
+        public static Guid GetIdentityIdClaimValue(this HttpContext context)
         {
             return GetGuidClaimValue("IdentityId", context);
         }
@@ -17,7 +17,7 @@ namespace CwkSocial.Api.Extensions
         private static Guid GetGuidClaimValue(string key, HttpContext context)
         {
             var identity = context.User.Identity as ClaimsIdentity;
-            return Guid.Parse(identity?.FindFirst("IdentityId")?.Value);
+            return Guid.Parse(identity?.FindFirst(key)?.Value);
         }
     }
 }

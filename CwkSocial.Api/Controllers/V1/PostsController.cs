@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 //using Cwk.Domain.Modles;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 using System.Net;
 using System.Security.Claims;
 using PostInteraction = CwkSocial.Api.Contracts.Posts.Responses.PostInteraction;
@@ -155,10 +156,7 @@ namespace CwkSocial.Api.Controllers.V1
 
             return Ok(newComment);
         }
-
-        //[HttpGet]
-        //[Route(ApiRoutes.Posts.PostInteractions)]
-        //[ValidateGuid("postId")]
+                
         [HttpGet]
         [Route(ApiRoutes.Posts.PostInteractions)]
         [ValidateGuid("postId")]
@@ -173,11 +171,7 @@ namespace CwkSocial.Api.Controllers.V1
             var mapped = _mapper.Map<List<PostInteraction>>(result.Payload);
             return Ok(mapped);
         }
-
-        //[HttpGet]
-        //[Route(ApiRoutes.Posts.PostInteractions)]
-        //[ValidateGuid("postId")]
-        //[ValidateModel]
+                
         [HttpPost]
         [Route(ApiRoutes.Posts.PostInteractions)]
         [ValidateGuid("postId")]
@@ -199,6 +193,30 @@ namespace CwkSocial.Api.Controllers.V1
             if (result.IsError) HandleErrorResponse(result.Errors);
             var mapped = _mapper.Map<PostInteraction>(result.Payload);
 
+            return Ok(mapped);
+        }
+
+
+        [HttpDelete]
+        [Route(ApiRoutes.Posts.InteractionById)]
+        [ValidateGuid("postId", "interactionId")]
+        public async Task<IActionResult> RemovePostInteraction(string postId, string interactionId, CancellationToken token)
+        {
+            var postGuid = Guid.Parse(postId);
+            var interactionGuid = Guid.Parse(interactionId);
+            var userProfileGuid = HttpContext.GetUserProfileIdClaimValue();
+
+            var command = new RemovePostInteraction
+            {
+                PostId = postGuid,
+                InteractionId = interactionGuid,
+                UserProfileId = userProfileGuid
+            };
+
+          var result =  await _mediator.Send(command, token);
+            if (result.IsError) return HandleErrorResponse(result.Errors);
+
+            var mapped = _mapper.Map<PostInteraction>(result.Payload);
             return Ok(mapped);
         }
     }

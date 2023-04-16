@@ -69,18 +69,5 @@ namespace CwkSocial.Api.Controllers.V1
 
         }
 
-        [HttpDelete]
-        [Route(ApiRoutes.UserProfiles.IdRoute)]
-        [ValidateGuid("id")]
-        public async Task<IActionResult> DeleteUserProfile(string id, CancellationToken cancellationToken)
-        {
-            var command = new DeleteUserProfile()
-            {
-                UserProfileId = Guid.Parse(id)
-            };
-            var response = await _mediator.Send(command, cancellationToken);
-
-            return response.IsError ? HandleErrorResponse(response.Errors) : NoContent();
-        }
     }
 }
